@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Game Bom 9 Kotak dengan Gambar - Responsive</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #121212;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+  h1 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #ff4444;
+    text-align: center;
+    font-size: 1.8rem;
+  }
+  #game {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .cell {
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(145deg, #222222, #2e2e2e);
+    border-radius: 12px;
+    box-shadow:  5px 5px 15px #1c1c1c,
+                 -5px -5px 15px #393939;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    overflow: hidden;
+  }
+  .cell.opened {
+    background: #444;
+    cursor: default;
+  }
+  .cell img {
+    max-width: 60%;
+    max-height: 60%;
+    user-select: none;
+    pointer-events: none;
+  }
+  #message {
+    margin-top: 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  #resetBtn {
+    margin-top: 1rem;
+    background: #ff4444;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 15px #ff4444aa;
+    transition: background 0.3s ease;
+  }
+  #resetBtn:hover {
+    background: #ff6666;
+  }
+</style>
+</head>
+<body>
+<h1>Game Pengangguran</h1>
+<div id="game" aria-label="Game Bom 9 kotak" role="grid"></div>
+<div id="message" aria-live="polite"></div>
+<button id="resetBtn" style="display:none;">Main Lagi</button>
+
+<script>
+  // Image URLs for safe and bomb (replace 'foto.jpg' with your bomb image path)
+  const bombImgUrl = 'img.jpg';
+  const safeImgUrl = 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+
+  const gameDiv = document.getElementById('game');
+  const messageDiv = document.getElementById('message');
+  const resetBtn = document.getElementById('resetBtn');
+  const totalCells = 9;
+  const bombCount = 1;
+
+  let bombIndex;
+  let openedCells;
+
+  function generateBombIndex() {
+    return Math.floor(Math.random() * totalCells);
+  }
+
+  function initGame() {
+    gameDiv.innerHTML = '';
+    messageDiv.textContent = 'Buka kotak dan hindari pekerjaan!';
+    resetBtn.style.display = 'none';
+    openedCells = 0;
+    bombIndex = generateBombIndex();
+
+    for(let i=0; i<totalCells; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.setAttribute('role', 'gridcell');
+      cell.setAttribute('tabindex', '0');
+      cell.dataset.index = i;
+      cell.addEventListener('click', onCellClick);
+      cell.addEventListener('keydown', onCellKeyDown);
+      gameDiv.appendChild(cell);
+    }
+  }
+
+  function onCellClick(e) {
+    const cell = e.currentTarget;
+    openCell(cell);
+  }
+
+  function onCellKeyDown(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      openCell(e.currentTarget);
+    }
+  }
+
+  function openCell(cell){
+    if(cell.classList.contains('opened')) return;
+    const idx = parseInt(cell.dataset.index, 10);
+    cell.classList.add('opened');
+
+    if(idx === bombIndex){
+      // Show bomb image
+      const img = document.createElement('img');
+      img.src = bombImgUrl;
+      img.alt = 'Bom';
+      cell.appendChild(img);
+      messageDiv.textContent = 'Kamu Mendapat Pekerjaan! Kamu kalah 😢';
+      endGame(false);
+    } else {
+      // Show safe image
+      const img = document.createElement('img');
+      img.src = safeImgUrl;
+      img.alt = 'Aman';
+      cell.appendChild(img);
+      openedCells++;
+      if(openedCells === totalCells - bombCount){
+        messageDiv.textContent = 'Selamat! Kamu menang 🎉';
+        endGame(true);
+      }
+    }
+  }
+
+  function endGame(won){
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      if(!cell.classList.contains('opened')){
+        cell.classList.add('opened');
+        const idx = parseInt(cell.dataset.index, 10);
+        const img = document.createElement('img');
+        if(idx === bombIndex){
+          img.src = bombImgUrl;
+          img.alt = 'Bom';
+        } else {
+          img.src = safeImgUrl;
+          img.alt = 'Aman';
+        }
+        cell.appendChild(img);
+        cell.style.cursor = 'default';
+        cell.removeEventListener('click', onCellClick);
+        cell.removeEventListener('keydown', onCellKeyDown);
+      }
+    });
+    resetBtn.style.display = 'inline-block';
+    resetBtn.focus();
+  }
+
+  resetBtn.addEventListener('click', ()=>{
+    initGame();
+  });
+
+  initGame();
+</script>
+</body>
+</html>
